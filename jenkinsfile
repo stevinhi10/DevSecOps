@@ -1,0 +1,86 @@
+classes:
+  - jenkins
+
+jenkins::cli::execs:
+  disable-cli-over-http:
+    command: 'disable-cli-over-http'
+  enable-agent-to-master-security:
+    command: 'enable-agent-to-master-security'
+
+jenkins::plugins:
+  - name: 'hashicorp-vault'
+    version: '2.3.0'
+  - name: 'sonar'
+    version: '2.13'
+  - name: 'checkmarx'
+    version: '8.90'
+
+jenkins::jobs:
+  my-app:
+    config_file: 'puppet:///modules/profile/jenkins/my-app.xml'
+  my-app-security:
+    config_file: 'puppet:///modules/profile/jenkins/my-app-security.xml'
+
+class profile::jenkins {
+  include jenkins
+
+  # Install and configure plugins
+  jenkins::plugin { 'hashicorp-vault':
+    version => '2.3.0',
+  }
+  jenkins::plugin { 'sonar':
+    version => '2.13',
+  }
+  jenkins::plugin { 'checkmarx':
+    version => '8.90',
+  }
+
+  # Configure Jenkins security
+  jenkins::cli::exec { 'disable-cli-over-http':
+    command => 'disable-cli-over-http',
+  }
+  jenkins::cli::exec { 'enable-agent-to-master-security':
+    command => 'enable-agent-to-master-security',
+  }
+
+  # Configure Jenkins jobs
+  jenkins::job { 'my-app':
+    config_file => 'puppet:///modules/profile/jenkins/my-app.xml',
+  }
+  jenkins::job { 'my-app-security':
+    config_file => 'puppet:///modules/profile/jenkins/my-app-security.xml',
+  }
+}
+
+class profile::app {
+  # Install and configure application dependencies
+  package { 'php':
+    ensure => 'installed',
+  }
+  package { 'composer':
+    ensure => 'installed',
+  }
+  package { 'docker':
+    ensure => 'installed',
+  }
+
+  # Build and deploy the application
+  exec { 'install-dependencies':
+    command => 'composer install',
+    cwd     => '/path/to/app',
+  }
+  exec { 'run-tests':
+    command => 'phpunit',
+    cwd     => '/path/to/app',
+  }
+  exec { 'build-docker-image':
+    command => 'docker build -t my-app .',
+    cwd     => '/path/to/app',
+  }
+  exec { 'deploy-docker-image':
+    command => 'docker run -d -p 8080:80 my-app',
+  }
+}
+
+include profile::jenkins
+include profile::app
