@@ -2,13 +2,12 @@ pipeline {
     agent {
         docker {
             image 'php:latest'
+            image 'checkmarx:latest'
         }
     }
     tools {
         php 'PHP'
-        checkmarx 'Checkmarx'
         sonarqube 'SonarQube'
-        dependencyCheck 'Dependency-Check'
         zap 'ZAP'
     }
     stages {
@@ -27,7 +26,8 @@ pipeline {
                 sh 'vendor/bin/phpunit'
                 sh 'npm run dependency-check'
                 sh 'npm run trufflehog'
-                sh 'npm run checkmarx'
+                sh 'npm install -g checkmarx'
+                sh 'checkmarx scan -v -c /path/to/checkmarx/config.xml'
             }
         }
         stage('Security') {
@@ -40,6 +40,17 @@ pipeline {
                     sh 'sonar-scanner'
                 }
                 sh 'zap-baseline.py -t http://localhost:3000'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'aws configure set region us-east-1'
+                sh 'aws secretsmanager create-secret --name db_password --secret-string "mysecretpassword"'
+                sh 'npm run deploy'
+            }
+        }
+    }
+}
             }
         }
         stage('Deploy') {
