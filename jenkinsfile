@@ -1,24 +1,34 @@
 pipeline {
     agent {
         docker {
-            image 'node:latest'
+            image 'php:latest'
         }
+    }
+    tools {
+        php 'PHP'
+        checkmarx 'Checkmarx'
+        sonarqube 'SonarQube'
+        dependencyCheck 'Dependency-Check'
+        zap 'ZAP'
     }
     environment {
         AWS_ACCESS_KEY_ID = "${aws_access_key_id}"
         AWS_SECRET_ACCESS_KEY = "${aws_secret_access_key}"
     }
     stages {
-        stage('Build') {
+        stage('Git Checkout') {
             steps {
-                checkout
-                sh 'npm install'
-                sh 'npm run build'
+                git branch: 'main', credentialsId: 'gitlab-creds', url: 'http://gitlab/gitlab-instance-***/enter-repo-name.git'
+            }
+        }
+        stage('Install PHP dependencies') {
+            steps {
+                sh 'composer install'
             }
         }
         stage('Test') {
             steps {
-                sh 'npm run test'
+                sh 'vendor/bin/phpunit'
                 sh 'npm run dependency-check'
                 sh 'npm run trufflehog'
                 sh 'npm run checkmarx'
@@ -26,11 +36,13 @@ pipeline {
         }
         stage('Security') {
             steps {
-                sh 'npm audit'
+                sh 'composer audit'
                 sh 'npm run security-scan'
                 sh 'npm run vulnerability-scan'
                 sh 'npm run penetration-test'
-                sh 'sonar-scanner'
+                withSonarQubeEnv('sonarqube') {
+                    sh 'sonar-scanner'
+                }
                 sh 'zap-baseline.py -t http://localhost:3000'
             }
         }
