@@ -6,9 +6,15 @@ pipeline {
         }
     }
     tools {
-        php 'PHP'
-        sonarqube 'SonarQube'
-        zap 'ZAP'
+        phpInstallation('PHP') {
+            // Configure the PHP installation
+            // ...
+        }
+        sonarqubeScanner 'SonarQube'
+        zapInstallation('ZAP') {
+            // Configure the ZAP installation
+            // ...
+        }
     }
     stages {
         stage('Git Checkout') {
@@ -39,7 +45,9 @@ pipeline {
                 withSonarQubeEnv('sonarqube') {
                     sh 'sonar-scanner'
                 }
-                sh 'zap-baseline.py -t http://localhost:3000'
+                zap(// Configure the ZAP scan
+                    // ...
+                )
             }
         }
         stage('Deploy') {
