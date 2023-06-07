@@ -51,14 +51,3 @@ pipeline {
         }
     }
 }
-            }
-        }
-        stage('Deploy') {
-            steps {
-                sh 'aws configure set region us-east-1'
-                sh 'aws secretsmanager create-secret --name db_password --secret-string "mysecretpassword"'
-                sh 'npm run deploy'
-            }
-        }
-    }
-}
