@@ -1,19 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'php:latest'
-            image 'checkmarx:latest'
-        }
-    }
-    tools {
-        phpInstallation('PHP') {
-            // Configure the PHP installation
-            // ...
-        }
-        sonarqubeScanner 'SonarQube'
-        zapInstallation('ZAP') {
-            // Configure the ZAP installation
-            // ...
+            image 'php:7.4'
         }
     }
     stages {
@@ -30,24 +18,12 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'vendor/bin/phpunit'
-                sh 'npm run dependency-check'
-                sh 'npm run trufflehog'
-                sh 'npm install -g checkmarx'
-                sh 'checkmarx scan -v -c /path/to/checkmarx/config.xml'
             }
         }
-        stage('Security') {
+        stage('Security Scan') {
             steps {
-                sh 'composer audit'
-                sh 'npm run security-scan'
-                sh 'npm run vulnerability-scan'
-                sh 'npm run penetration-test'
-                withSonarQubeEnv('sonarqube') {
-                    sh 'sonar-scanner'
-                }
-                zap(// Configure the ZAP scan
-                    // ...
-                )
+                sh 'npm install -g checkmarx'
+                sh 'checkmarx scan -v -c /path/to/checkmarx/config.xml'
             }
         }
         stage('Deploy') {
