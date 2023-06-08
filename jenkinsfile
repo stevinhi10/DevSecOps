@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'gitlab-creds', url: 'http://gitlab/gitlab-instance-***/enter-repo-name.git'
+                git branch: 'main', credentialsId: 'glpat-1Aup4t-kWKegoUhb4H9x', url: 'https://gitlab.com/stevinhi10/DevSecOps.git'
             }
         }
         stage('Install PHP dependencies') {
